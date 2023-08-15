@@ -1,0 +1,7 @@
+.idea
+.gitignore
+.npmignore
+.env
+_pk_
+tests
+logs

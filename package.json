@@ -1,0 +1,42 @@
+{
+  "name": "djstemplate",
+  "description": "A Discord.JS template that does everything you would need!",
+  "version": "1.0.0",
+  "main": "template.js",
+  "bin": {
+    "djs": "cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OguzhanUmutlu/DJSTemplate.git"
+  },
+  "types": "template.d.ts",
+  "type": "module",
+  "keywords": [
+    "javascript",
+    "bot",
+    "cli",
+    "template",
+    "node",
+    "js",
+    "discord",
+    "discord-bot",
+    "djs"
+  ],
+  "bugs": {
+    "url": "https://github.com/OguzhanUmutlu/DJSTemplate"
+  },
+  "homepage": "https://github.com/OguzhanUmutlu/DJSTemplate#readme",
+  "license": "MIT",
+  "author": "OguzhanUmutlu",
+  "scripts": {},
+  "dependencies": {
+    "discord.js": "^14.12.1",
+    "dotenv": "^16.3.1",
+    "fancy-printer": "^1.2.37",
+    "typescript": "^5.1.6"
+  },
+  "devDependencies": {
+    "discord-api-types": "^0.37.53"
+  }
+}
