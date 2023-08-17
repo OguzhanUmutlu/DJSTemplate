@@ -15,6 +15,18 @@ import {
     User
 } from "discord.js";
 import {ReadStream} from "tty";
+import {ApplicationCommandType} from "discord-api-types/v10";
+
+
+type SlashBuilder =
+    SlashCommandBuilder
+    | SlashCommandSubcommandBuilder
+    | SlashCommandOptionsOnlyBuilder
+    | SlashCommandSubcommandGroupBuilder
+    | SlashCommandSubcommandsOnlyBuilder;
+type ContextMenuType = ApplicationCommandType.Message | ApplicationCommandType.User;
+type ContextMenuBuilder<T extends ContextMenuType, K extends ContextMenuCommandBuilder = ContextMenuCommandBuilder> =
+    K["type"] extends T ? K : never;
 
 type DoBot<T, K extends boolean = true> = T & {
     client: Bot<K>
@@ -28,7 +40,25 @@ type SlashExecutor =
     Record<string, SlashExecutorFunction> |
     Record<string, Record<string, SlashExecutorFunction>>;
 
-type ContextMenuExecutor = (interaction: DoBot<ContextMenuCommandInteraction>, interacted: User | Message) => any;
+type ContextMenuExecutor<T extends ContextMenuType> = (interaction: DoBot<ContextMenuCommandInteraction>, interacted: T extends ApplicationCommandType.Message ? Message : User) => any;
+
+type ContextMenuBuildProperty<T extends ContextMenuType> =
+    ContextMenuBuilder<T>
+    | ((guild: Guild, client: Bot) => ContextMenuBuilder<T>);
+type SlashBuildProperty = SlashBuilder | ((guild: Guild, client: Bot) => SlashBuilder);
+
+type CommandSavedSlash = {
+    default: SlashExecutor,
+    build: SlashBuilder | ((guild: Guild) => SlashBuilder),
+    file: string
+};
+type CommandSavedContextMenu<T extends ContextMenuType> = {
+    default: ContextMenuExecutor<T>,
+    build: ContextMenuBuilder<T> | ((guild: Guild) => ContextMenuBuilder<T>),
+    file: string
+};
+type CommandSaved = CommandSavedSlash | CommandSavedContextMenu<ContextMenuType>;
+type CommandSavedGuild = Exclude<CommandSaved, { build: Function }>
 
 declare module "discord.js" {
     // @ts-ignore
@@ -52,9 +82,10 @@ declare module "discord.js" {
     }
 }
 
-export function command(build: ContextMenuCommandBuilder | ((guild: Guild) => ContextMenuCommandBuilder), command: ContextMenuExecutor): any;
-export function command(build: SlashBuilder | ((guild: Guild) => SlashBuilder), command: SlashExecutor): any;
-export function command(command: ContextMenuExecutor | SlashExecutor): any;
+export function command<T extends ContextMenuType>(build: ContextMenuBuildProperty<T>, command: ContextMenuExecutor<T>): any;
+export function command(build: SlashBuildProperty, command: SlashExecutor): any;
+export function command<T extends ContextMenuType>(command: ContextMenuExecutor<T>): any;
+export function command(command: SlashExecutor): any;
 
 export function event<T extends keyof ClientEvents>(name: T, callback: (...args: ClientEvents[T]) => any): any;
 export function event<T extends keyof ClientEvents>(name: T): any;
@@ -62,14 +93,6 @@ export function event<T extends keyof ClientEvents>(name: T): any;
 export const vr: Map<any, any>;
 
 export function doOnce(key: any, value: any): any;
-
-type SlashBuilder =
-    SlashCommandBuilder
-    | SlashCommandSubcommandBuilder
-    | SlashCommandOptionsOnlyBuilder
-    | SlashCommandSubcommandGroupBuilder
-    | SlashCommandSubcommandsOnlyBuilder;
-
 
 export default class Bot<Ready extends boolean = boolean> extends Client<Ready> {
     constructor(options?: Partial<NewClientOptions>);
@@ -80,25 +103,9 @@ export default class Bot<Ready extends boolean = boolean> extends Client<Ready> 
 
     broadcastCommands(): Promise<void> | any;
 
-    getCommands(): ({
-        default: SlashExecutor,
-        build: SlashBuilder | ((guild: Guild) => SlashBuilder),
-        file: string
-    } | {
-        default: ContextMenuExecutor,
-        build: ContextMenuCommandBuilder | ((guild: Guild) => ContextMenuCommandBuilder),
-        file: string
-    })[];
+    getCommands(): CommandSaved[];
 
-    getCommandsFor(guild: Guild): ({
-        default: SlashExecutor,
-        build: SlashBuilder,
-        file: string
-    } | {
-        default: ContextMenuExecutor,
-        build: ContextMenuCommandBuilder,
-        file: string
-    })[];
+    getCommandsFor(guild: Guild): CommandSavedGuild[];
 
     registerEvent(path: string, pseudoFile?: boolean): Promise<void> | any;
 
@@ -132,4 +139,19 @@ export class Terminal {
     getCommand(name: string): (args: string[]) => any;
 
     dispatchCommand(name: string, args: string[]): Promise<void>;
+}
+
+declare abstract class Command<T, K> {
+    abstract build: T;
+
+    execute: K;
+}
+
+export abstract class SlashCommand<T extends SlashBuildProperty = SlashBuildProperty> extends Command<T, SlashExecutor> {
+}
+
+export abstract class ContextMenuCommand<
+    K extends ContextMenuType = ContextMenuType,
+    T extends ContextMenuBuildProperty<K> = ContextMenuBuildProperty<K>
+> extends Command<T, ContextMenuExecutor<K>> {
 }

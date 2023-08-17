@@ -1,10 +1,10 @@
 {
-  "name": "djstemplate",
+  "name": "djsbottemplate",
   "description": "A Discord.JS template that does everything you would need!",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "template.js",
   "bin": {
-    "djs": "cli.js"
+    "dts": "cli.js"
   },
   "repository": {
     "type": "git",
@@ -14,14 +14,17 @@
   "type": "module",
   "keywords": [
     "javascript",
+    "typescript",
     "bot",
     "cli",
     "template",
     "node",
     "js",
+    "ts",
     "discord",
     "discord-bot",
-    "djs"
+    "djs",
+    "dts"
   ],
   "bugs": {
     "url": "https://github.com/OguzhanUmutlu/DJSTemplate"

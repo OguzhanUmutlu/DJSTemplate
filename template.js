@@ -1,4 +1,11 @@
-import {ChatInputCommandInteraction, Client, ContextMenuCommandInteraction, Guild} from "discord.js";
+import {
+    ChatInputCommandInteraction,
+    Client,
+    ContextMenuCommandBuilder,
+    ContextMenuCommandInteraction,
+    Guild,
+    SlashCommandBuilder
+} from "discord.js";
 import {ApplicationCommandOptionType, GatewayIntentBits} from "discord-api-types/v10";
 import {config} from "dotenv";
 import {existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync} from "fs";
@@ -120,13 +127,23 @@ export default class Bot extends Client {
         this.#slashCommands,
         (command, path) => {
             command = {...command};
-            if (Array.isArray(command.default)) {
-                if (command.default.length === 1) {
-                    command = {...command, default: command.default[0]};
-                } else if (command.default.length >= 2) {
-                    command = {...command, build: command.default[0], default: command.default[1]};
+            const def = command.default;
+            if (Array.isArray(def)) {
+                if (def.length === 1) {
+                    command = {...command, default: def[0]};
+                } else if (def.length >= 2) {
+                    command = {...command, build: def[0], default: def[1]};
                 } else throw new Error("Invalid command construction.");
+            } else if (typeof def === "function" && def.prototype && def.prototype.constructor === def) {
+                const cmd = new def(this);
+                command = {...command, build: cmd.build, default: cmd.execute};
+            } else if (def instanceof Command) {
+                command = {...command, build: def.build, default: def.execute};
             }
+            if (!(command.build instanceof SlashCommandBuilder) && !(command.build instanceof ContextMenuCommandBuilder))
+                throw "Couldn't find the builder.";
+            if (typeof command.default !== "function" && typeof command.default !== "object")
+                throw "Couldn't find the executor.";
             command.file = path;
             this.#slashCommands[path] = command;
             this.commandWatchers.add(dirname(path));
@@ -525,4 +542,21 @@ export class Terminal {
             await cmd(args.slice(1));
         } else printer.error("Command not found: " + name);
     };
+}
+
+class Command {
+    #client;
+
+    constructor(client) {
+        this.#client = client;
+    };
+
+    execute() {
+    };
+}
+
+export class SlashCommand extends Command {
+}
+
+export class ContextMenuCommand extends Command {
 }

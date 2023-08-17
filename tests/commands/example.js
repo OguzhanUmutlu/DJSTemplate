@@ -10,5 +10,3 @@ export default command(
         await interaction.reply("Hello, world!");
     }
 );
-
-
