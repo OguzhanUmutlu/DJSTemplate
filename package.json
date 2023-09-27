@@ -36,7 +36,7 @@
   "dependencies": {
     "discord.js": "^14.12.1",
     "dotenv": "^16.3.1",
-    "fancy-printer": "^1.2.37",
+    "fancy-printer": "^1.2.54",
     "typescript": "^5.1.6"
   },
   "devDependencies": {
